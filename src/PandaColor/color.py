@@ -7,10 +7,10 @@ import numbers
 import math
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
     from .rgb import RGB
     from .hex import Hex
     from .hsv import HSV
+    from .hsl import HSL
 
 class BaseColor(ABC):
     """
@@ -40,6 +40,12 @@ class BaseColor(ABC):
     @abstractmethod
     def to_hex(self) -> 'Hex':
         """Convert to Hex representation."""
+        pass
+
+    @classmethod
+    @abstractmethod
+    def random(cls) -> 'RGB':
+        """Generate a random color in this color space."""
         pass
     
     # === RGB COMPONENT ACCESS (common to all color types) ===
@@ -115,8 +121,7 @@ class BaseColor(ABC):
         return float_value
     
     # === COLOR SPACE CONVERSIONS ===
-    
-    def to_hsl(self) -> 'HSV':
+    def to_hsl(self) -> 'HSL':
         """Convert to HSL (Hue, Saturation, Lightness)."""
         r, g, b = self.normalized()
         
@@ -150,7 +155,7 @@ class BaseColor(ABC):
         # Import here to avoid circular imports
         from .hsv import HSL
         return HSL(hue, saturation * 100, lightness * 100)
-    
+
     def to_hsv(self) -> 'HSV':
         """Convert to HSV (Hue, Saturation, Value)."""
         r, g, b = self.normalized()
@@ -189,88 +194,8 @@ class BaseColor(ABC):
             self._b / 255.0
         )
     
-    # === COLOR MANIPULATION ===
-    
-    def lighten(self, factor: float) -> 'Self':
-        """
-        Return lightened version of color.
-        
-        Args:
-            factor: Lightening factor (0.0 to 1.0)
-            
-        Returns:
-            New color instance of same type, lightened
-        """
-        factor = max(0.0, min(1.0, factor))
-        new_r = min(255, int(self._r + (255 - self._r) * factor))
-        new_g = min(255, int(self._g + (255 - self._g) * factor))
-        new_b = min(255, int(self._b + (255 - self._b) * factor))
-        
-        # Return same type as caller
-        return self._create_from_rgb(new_r, new_g, new_b)
-    
-    def darken(self, factor: float) -> 'Self':
-        """
-        Return darkened version of color.
-        
-        Args:
-            factor: Darkening factor (0.0 to 1.0)
-            
-        Returns:
-            New color instance of same type, darkened
-        """
-        factor = max(0.0, min(1.0, factor))
-        new_r = int(self._r * (1.0 - factor))
-        new_g = int(self._g * (1.0 - factor))
-        new_b = int(self._b * (1.0 - factor))
-        
-        return self._create_from_rgb(new_r, new_g, new_b)
-    
-    def invert(self) -> 'Self':
-        """Return inverted (complement) color."""
-        return self._create_from_rgb(255 - self._r, 255 - self._g, 255 - self._b)
-    
-    def grayscale(self) -> 'Self':
-        """Convert to grayscale using luminance formula (ITU-R BT.709)."""
-        # Using ITU-R BT.709 luma coefficients
-        gray = int(0.2126 * self._r + 0.7152 * self._g + 0.0722 * self._b)
-        return self._create_from_rgb(gray, gray, gray)
-    
-    def saturate(self, factor: float) -> 'Self':
-        """
-        Increase saturation by factor.
-        
-        Args:
-            factor: Saturation increase factor (0.0 to 1.0)
-        """
-        hsl = self.to_hsl()
-        new_saturation = min(100, hsl.s + (hsl.s * factor))
-        return hsl.__class__(hsl.h, new_saturation, hsl.l).to_rgb()
-    
-    def desaturate(self, factor: float) -> 'Self':
-        """
-        Decrease saturation by factor.
-        
-        Args:
-            factor: Saturation decrease factor (0.0 to 1.0)
-        """
-        hsl = self.to_hsl()
-        new_saturation = max(0, hsl.s - (hsl.s * factor))
-        return hsl.__class__(hsl.h, new_saturation, hsl.l).to_rgb()
-    
-    def adjust_hue(self, degrees: float) -> 'Self':
-        """
-        Adjust hue by specified degrees.
-        
-        Args:
-            degrees: Degrees to adjust hue (-360 to 360)
-        """
-        hsl = self.to_hsl()
-        new_hue = (hsl.h + degrees) % 360
-        return hsl.__class__(new_hue, hsl.s, hsl.l).to_rgb()
-    
     # === COLOR ANALYSIS ===
-    
+    @property
     def luminance(self) -> float:
         """
         Calculate relative luminance (0.0 to 1.0).
@@ -355,3 +280,57 @@ class BaseColor(ABC):
         """CSS rgba() format: rgba(255, 128, 64, 1.0)"""
         alpha = max(0.0, min(1.0, alpha))
         return f"rgba({self._r}, {self._g}, {self._b}, {alpha})"
+
+    # === TERMINAL COLORS ===
+    def _supports_truecolor_env(self) -> bool:
+        import os
+        colorterm = os.environ.get("COLORTERM", "").lower()
+        return colorterm in ("truecolor", "24bit")
+
+    def _supports_256color(self) -> bool:
+        import os
+        term = os.environ.get("TERM", "").lower()
+        return "256color" in term
+
+    @property
+    def ansi256(self) -> int:
+        """
+        Convert 24-bit RGB to the closest 256-color ANSI code.
+        """
+        # Clamp values
+        r = max(0, min(255, self._r))
+        g = max(0, min(255, self._g))
+        b = max(0, min(255, self._b))
+
+        # Map RGB to 0-5
+        def to_ansi_level(c):
+            if c < 48:
+                return 0
+            elif c < 114:
+                return 1
+            else:
+                return (c - 35) // 40
+        
+        r_level = to_ansi_level(r)
+        g_level = to_ansi_level(g)
+        b_level = to_ansi_level(b)
+        
+        return 16 + 36*r_level + 6*g_level + b_level
+
+    def color_text_foreground(self, text: str) -> str:
+        """Wrap text with ANSI escape codes for foreground color."""
+        if self._supports_truecolor_env():
+            return f"\033[38;2;{self._r};{self._g};{self._b}m{text}\033[0m"
+        elif self._supports_256color():
+            return f"\033[38;5;{self.ansi256}m{text}\033[0m"
+        else:
+            return text
+        
+    def color_text_background(self, text: str) -> str:
+        """Wrap text with ANSI escape codes for background color."""
+        if self._supports_truecolor_env():
+            return f"\033[48;2;{self._r};{self._g};{self._b}m{text}\033[0m"
+        elif self._supports_256color():
+            return f"\033[48;5;{self.ansi256}m{text}\033[0m"
+        else:
+            return text

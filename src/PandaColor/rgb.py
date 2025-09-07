@@ -170,7 +170,6 @@ class RGB(BaseColor):
                                      for i, v in enumerate(values)]
     
     # === ABSTRACT METHOD IMPLEMENTATIONS ===
-    
     def to_rgb(self) -> 'RGB':
         """Convert to RGB representation (returns self since this is RGB)."""
         return self
@@ -250,3 +249,9 @@ class RGB(BaseColor):
             RGB: New RGB instance
         """
         return cls(int(r * 255), int(g * 255), int(b * 255))
+
+    @classmethod
+    def random(cls) -> 'RGB':
+        """Generate a random RGB color."""
+        import random
+        return cls(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
