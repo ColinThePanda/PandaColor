@@ -1,3 +1,4 @@
+import os
 from .color import Color
 
 def lighten(color: Color, factor: float) -> Color:
@@ -34,6 +35,7 @@ def blend(color1: Color, color2: Color, factor: float) -> Color:
     return color1.__class__(new_r, new_g, new_b)
 
 def clamp(color: Color) -> Color:
+    """Clamp color values to valid RGB range (0-255)."""
     r = max(0, min(255, color.r))
     g = max(0, min(255, color.g))
     b = max(0, min(255, color.b))
@@ -45,3 +47,48 @@ def distance(c1: Color, c2: Color) -> float:
     dg = c1.g - c2.g
     db = c1.b - c2.b
     return (dr**2 + dg**2 + db**2) ** 0.5
+
+# === TERMINAL COLOR UTILITIES ===
+
+def _supports_truecolor_env() -> bool:
+    """Check if the environment supports 24-bit truecolor."""
+    colorterm = os.environ.get("COLORTERM", "").lower()
+    return colorterm in ("truecolor", "24bit")
+
+def _supports_256color() -> bool:
+    """Check if the environment supports 256-color mode."""
+    term = os.environ.get("TERM", "").lower()
+    return "256color" in term
+
+def to_ansi256(color: Color) -> int:
+    """Convert 24-bit Color to the closest 256-color ANSI code."""
+    r, g, b = color.r, color.g, color.b
+
+    def to_ansi_level(c):
+        if c < 48:
+            return 0
+        elif c < 114:
+            return 1
+        else:
+            return (c - 35) // 40
+
+    r_level, g_level, b_level = to_ansi_level(r), to_ansi_level(g), to_ansi_level(b)
+    return 16 + 36 * r_level + 6 * g_level + b_level
+
+def color_text(color: Color, text: str) -> str:
+    """Apply color to text foreground with automatic terminal capability detection."""
+    if _supports_truecolor_env():
+        return f"\033[38;2;{color.r};{color.g};{color.b}m{text}\033[0m"
+    elif _supports_256color():
+        return f"\033[38;5;{to_ansi256(color)}m{text}\033[0m"
+    else:
+        return text
+
+def highlight_text(color: Color, text: str) -> str:
+    """Apply color to text background with automatic terminal capability detection."""
+    if _supports_truecolor_env():
+        return f"\033[48;2;{color.r};{color.g};{color.b}m{text}\033[0m"
+    elif _supports_256color():
+        return f"\033[48;5;{to_ansi256(color)}m{text}\033[0m"
+    else:
+        return text

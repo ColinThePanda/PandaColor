@@ -1,8 +1,6 @@
 from typing import Iterable, Tuple, Any, Iterator
 import numbers
 import random
-import os
-
 
 class Color:
     RGB_MIN = 0
@@ -135,7 +133,6 @@ class Color:
         else:
             object.__setattr__(self, name, value)
 
-
     # === PROPERTIES ===
     @property
     def r(self) -> int:
@@ -153,7 +150,7 @@ class Color:
         return self._b
 
     @property
-    def rgb(self) -> Tuple[int, int, int]:
+    def rgb(self) -> "Color":
         """RGB values as a tuple."""
         return Color(self._r, self._g, self._b)
 
@@ -276,47 +273,6 @@ class Color:
 
         r_lin, g_lin, b_lin = linearize(self._r), linearize(self._g), linearize(self._b)
         return 0.2126 * r_lin + 0.7152 * g_lin + 0.0722 * b_lin
-
-    # === TERMINAL COLORS ===
-    def _supports_truecolor_env(self) -> bool:
-        colorterm = os.environ.get("COLORTERM", "").lower()
-        return colorterm in ("truecolor", "24bit")
-
-    def _supports_256color(self) -> bool:
-        term = os.environ.get("TERM", "").lower()
-        return "256color" in term
-
-    @property
-    def ansi256(self) -> int:
-        """Convert 24-bit Color to the closest 256-color ANSI code."""
-        r, g, b = self._r, self._g, self._b
-
-        def to_ansi_level(c):
-            if c < 48:
-                return 0
-            elif c < 114:
-                return 1
-            else:
-                return (c - 35) // 40
-
-        r_level, g_level, b_level = to_ansi_level(r), to_ansi_level(g), to_ansi_level(b)
-        return 16 + 36 * r_level + 6 * g_level + b_level
-
-    def color_text_foreground(self, text: str) -> str:
-        if self._supports_truecolor_env():
-            return f"\033[38;2;{self._r};{self._g};{self._b}m{text}\033[0m"
-        elif self._supports_256color():
-            return f"\033[38;5;{self.ansi256}m{text}\033[0m"
-        else:
-            return text
-
-    def color_text_background(self, text: str) -> str:
-        if self._supports_truecolor_env():
-            return f"\033[48;2;{self._r};{self._g};{self._b}m{text}\033[0m"
-        elif self._supports_256color():
-            return f"\033[48;5;{self.ansi256}m{text}\033[0m"
-        else:
-            return text
 
     # === VARIANT CREATORS ===
     def with_red(self, r: int) -> "Color":
