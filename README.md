@@ -52,7 +52,7 @@ pip install .
 ## Quick Start
 
 ```python
-from panda_color import Color, RED, BLUE, GREEN
+from panda_color import Color, Colors
 
 # Multiple ways to create colors
 color1 = Color(255, 128, 0)           # RGB integers
@@ -63,8 +63,8 @@ color5 = Color.from_normalized(1.0, 0.5, 0.0)  # Normalized floats
 color6 = Color.random()               # Random color
 
 # Use predefined colors
-print(RED.to_hex())     # #ff0000
-print(BLUE.css_rgb())   # rgb(0, 0, 255)
+print(Colors.RED.to_hex())     # #ff0000
+print(Colors.BLUE.css_rgb())   # rgb(0, 0, 255)
 
 # GLSL-style swizzling
 print(color1.r)       # 255
@@ -82,31 +82,17 @@ color1.gb = [64, 32]  # Set green and blue components
 PandaColor includes 36 predefined colors for immediate use:
 
 ```python
-from panda_color import (
-    # Basic colors
-    BLACK, WHITE, RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA,
-
-    # Grays
-    GRAY, LIGHT_GRAY, DARK_GRAY,
-
-    # Extended colors
-    ORANGE, PINK, PURPLE, BROWN, LIME, TEAL, NAVY, OLIVE, MAROON,
-
-    # Named colors
-    AQUA, CRIMSON, CORNFLOWER_BLUE, DARK_ORANGE, DARK_GREEN, DARK_RED,
-    STEEL_BLUE, DARK_SLATE_GRAY, MEDIUM_PURPLE, FIREBRICK, SALMON,
-    LIME_GREEN, SKY_BLUE, GOLD, SILVER
-)
+from panda_color import Colors
 
 # Use them directly
-print(f"Crimson: {CRIMSON.to_hex()}")        # #dc143c
-print(f"Sky Blue: {SKY_BLUE.css_rgb()}")     # rgb(135, 206, 235)
+print(f"Crimson: {Colors.CRIMSON.to_hex()}")        # #dc143c
+print(f"Sky Blue: {Colors.SKY_BLUE.css_rgb()}")     # rgb(135, 206, 235)
 ```
 
 ## Color Manipulations
 
 ```python
-from panda_color import Color, lighten, darken, invert, grayscale, blend, RED, BLUE
+from panda_color import Color, Colors, lighten, darken, invert, grayscale, blend
 
 original = Color(100, 150, 200)
 
@@ -119,40 +105,40 @@ inverted = invert(original)         # Color complement
 gray = grayscale(original)          # Grayscale conversion
 
 # Blending colors
-purple = blend(RED, BLUE, 0.5)      # 50/50 blend -> Color(127, 0, 127)
+purple = blend(Colors.RED, Colors.BLUE, 0.5)      # 50/50 blend -> Color(127, 0, 127)
 ```
 
 ## Output Formats
 
 ```python
-from panda_color import ORANGE
+from panda_color import Colors
 
 # Web formats
-print(ORANGE.to_hex())           # #ffa500
-print(ORANGE.css_rgb())          # rgb(255, 165, 0)
-print(ORANGE.css_rgba(0.8))      # rgba(255, 165, 0, 0.8)
+print(Colors.ORANGE.to_hex())           # #ffa500
+print(Colors.ORANGE.css_rgb())          # rgb(255, 165, 0)
+print(Colors.ORANGE.css_rgba(0.8))      # rgba(255, 165, 0, 0.8)
 
 # Data formats
-print(ORANGE.to_tuple())         # (255, 165, 0)
-print(ORANGE.to_list())          # [255, 165, 0]
-print(ORANGE.to_dict())          # {'r': 255, 'g': 165, 'b': 0}
-print(ORANGE.normalized())       # (1.0, 0.6470588235294118, 0.0)
+print(Colors.ORANGE.to_tuple())         # (255, 165, 0)
+print(Colors.ORANGE.to_list())          # [255, 165, 0]
+print(Colors.ORANGE.to_dict())          # {'r': 255, 'g': 165, 'b': 0}
+print(Colors.ORANGE.normalized())       # (1.0, 0.6470588235294118, 0.0)
 
 # Properties
-print(ORANGE.luminance)          # 0.5515... (relative luminance)
+print(Colors.ORANGE.luminance)          # 0.5515... (relative luminance)
 ```
 
 ## Terminal Colors
 
 ```python
-from panda_color import RED, GREEN, BLUE, color_text, highlight_text
+from panda_color import Colors, color_text, highlight_text
 
 # Colored text output (with automatic fallback support)
-print(color_text(RED, "This text is red!"))
-print(highlight_text(GREEN, "This has a green background!"))
+print(color_text(Colors.RED, "This text is red!"))
+print(highlight_text(Colors.GREEN, "This has a green background!"))
 
 # Combine with predefined colors
-print(color_text(BLUE, "Blue text"))
+print(color_text(Colors.BLUE, "Blue text"))
 ```
 
 ## Sequence Protocol
@@ -160,19 +146,19 @@ print(color_text(BLUE, "Blue text"))
 Colors support iteration and indexing:
 
 ```python
-from panda_color import PURPLE
+from panda_color import Colors
 
 # Iteration
-for component in PURPLE:
+for component in Colors.PURPLE:
     print(component)  # 128, 0, 128
 
 # Indexing
-print(PURPLE[0])  # 128 (red)
-print(PURPLE[1])  # 0 (green)
-print(PURPLE[2])  # 128 (blue)
+print(Colors.PURPLE[0])  # 128 (red)
+print(Colors.PURPLE[1])  # 0 (green)
+print(Colors.PURPLE[2])  # 128 (blue)
 
 # Length
-print(len(PURPLE))  # 3
+print(len(Colors.PURPLE))  # 3
 ```
 
 ## Immutable Variants
@@ -180,10 +166,10 @@ print(len(PURPLE))  # 3
 Create new colors based on existing ones:
 
 ```python
-from panda_color import BLUE
+from panda_color import Colors
 
-red_blue = BLUE.with_red(255)     # Color(255, 0, 255) - magenta
-light_blue = BLUE.with_green(128) # Color(0, 128, 255) - lighter blue
+red_blue = Colors.BLUE.with_red(255)     # Color(255, 0, 255) - magenta
+light_blue = Colors.BLUE.with_green(128) # Color(0, 128, 255) - lighter blue
 ```
 
 ---
@@ -250,14 +236,44 @@ to_ansi256(color)              # Convert to ANSI 256-color code
 All predefined colors are available as constants:
 
 ```python
-from panda_color import (
-    BLACK, WHITE, RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA,
-    GRAY, LIGHT_GRAY, DARK_GRAY, ORANGE, PINK, PURPLE, BROWN,
-    LIME, TEAL, NAVY, OLIVE, MAROON, AQUA, CRIMSON,
-    CORNFLOWER_BLUE, DARK_ORANGE, DARK_GREEN, DARK_RED,
-    STEEL_BLUE, DARK_SLATE_GRAY, MEDIUM_PURPLE, FIREBRICK,
-    SALMON, LIME_GREEN, SKY_BLUE, GOLD, SILVER
-)
+from panda_color import Colors
+Colors.BLACK
+Colors.WHITE
+Colors.RED
+Colors.GREEN
+Colors.BLUE
+Colors.YELLOW
+Colors.CYAN
+Colors.MAGENTA
+Colors.GRAY
+Colors.LIGHT_GRAY
+Colors.DARK_GRAY
+Colors.ORANGE
+Colors.PINK
+Colors.PURPLE
+Colors.BROWN
+Colors.LIME
+Colors.TEAL
+Colors.NAVY
+Colors.OLIVE
+Colors.MAROON
+Colors.AQUA
+Colors.CRIMSON
+Colors.CORNFLOWER_BLUE
+Colors.DARK_ORANGE
+Colors.DARK_GREEN
+DARK_RED
+Colors.STEEL_BLUE
+Colors.DARK_SLATE_GRAY
+Colors.MEDIUM_PURPLE
+Colors.FIREBRICK
+Colors.SALMON
+Colors.LIME_GREEN
+Colors.SKY_BLUE
+Colors.GOLD
+Colors.SILVER
+
+
 ```
 
 ---
@@ -267,9 +283,9 @@ from panda_color import (
 ### Web Development
 
 ```python
-from panda_color import BLUE, lighten, darken
+from panda_color import Colors, lighten, darken
 
-primary = BLUE
+primary = Colors.BLUE
 secondary = lighten(primary, 0.2)
 accent = darken(primary, 0.3)
 
@@ -281,11 +297,11 @@ print(f"Accent: {accent.css_rgb()}")        # rgb(0, 0, 178)
 ### Terminal Applications
 
 ```python
-from panda_color import RED, GREEN, YELLOW, color_text
+from panda_color import Colors, color_text
 
-print(color_text(RED, "❌ Error: Something went wrong"))
-print(color_text(GREEN, "✅ Success: Operation completed"))
-print(color_text(YELLOW, "⚠️  Warning: Check your input"))
+print(color_text(Colors.RED, "❌ Error: Something went wrong"))
+print(color_text(Colors.GREEN, "✅ Success: Operation completed"))
+print(color_text(Colors.YELLOW, "⚠️  Warning: Check your input"))
 ```
 
 ### Color Analysis
@@ -319,5 +335,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT © 2025 Colin Politi  
+MIT © 2025 Colin Politi
 See [LICENSE](LICENSE) for details.

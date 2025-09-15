@@ -1,6 +1,9 @@
 from typing import Tuple, Iterable, Iterator, Union, overload
 
 class Color:
+    RGB_MIN : int
+    RGB_MAX : int
+    
     # --- Constructor ---
     @overload
     def __init__(self) -> None: ...
@@ -159,3 +162,40 @@ class Color:
     # --- Equality & hashing ---
     def __eq__(self, other: object) -> bool: ...
     def __hash__(self) -> int: ...
+
+class Colors:
+    BLACK : Color
+    WHITE : Color
+    RED : Color
+    GREEN : Color
+    BLUE : Color
+    YELLOW : Color
+    CYAN : Color
+    MAGENTA : Color
+    GRAY : Color
+    LIGHT_GRAY : Color
+    DARK_GRAY : Color
+    ORANGE : Color
+    PINK : Color
+    PURPLE : Color
+    BROWN : Color
+    LIME : Color
+    TEAL : Color
+    NAVY : Color
+    OLIVE : Color
+    MAROON : Color
+    AQUA : Color
+    CRIMSON : Color
+    CORNFLOWER_BLUE : Color
+    DARK_ORANGE : Color
+    DARK_GREEN : Color
+    DARK_RED : Color
+    STEEL_BLUE : Color
+    DARK_SLATE_GRAY : Color
+    MEDIUM_PURPLE : Color
+    FIREBRICK : Color
+    SALMON : Color
+    LIME_GREEN : Color
+    SKY_BLUE : Color
+    GOLD : Color
+    SILVER : Color

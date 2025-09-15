@@ -26,7 +26,7 @@ def grayscale(color: Color) -> Color:
     gray = int(0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b)
     return color.__class__(gray, gray, gray)
 
-def blend(color1: Color, color2: Color, factor: float) -> Color:
+def mix(color1: Color, color2: Color, factor: float) -> Color:
     """Blend two colors together by factor (0.0–1.0)."""
     factor = max(0.0, min(1.0, factor))
     new_r = int(color1.r * (1 - factor) + color2.r * factor)
@@ -75,7 +75,7 @@ def to_ansi256(color: Color) -> int:
     r_level, g_level, b_level = to_ansi_level(r), to_ansi_level(g), to_ansi_level(b)
     return 16 + 36 * r_level + 6 * g_level + b_level
 
-def color_text(color: Color, text: str) -> str:
+def color_text(text: str, color: Color) -> str:
     """Apply color to text foreground with automatic terminal capability detection."""
     if _supports_truecolor_env():
         return f"\033[38;2;{color.r};{color.g};{color.b}m{text}\033[0m"
@@ -84,7 +84,7 @@ def color_text(color: Color, text: str) -> str:
     else:
         return text
 
-def highlight_text(color: Color, text: str) -> str:
+def highlight_text(text: str, color: Color) -> str:
     """Apply color to text background with automatic terminal capability detection."""
     if _supports_truecolor_env():
         return f"\033[48;2;{color.r};{color.g};{color.b}m{text}\033[0m"
