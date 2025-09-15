@@ -1,7 +1,7 @@
-from panda_color import RGB
+from panda_color import Color
 
 if __name__ == "__main__":
-    color = RGB(255, 128, 64)
+    color = Color(255, 128, 64)
     
     print("=== GLSL-Style Swizzling Examples ===")
     print(f"Original color: {color}")
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     print(f"After color.rg = (255, 0): {color}")
     
     # Swizzle assignment from another color's swizzle
-    color2 = RGB(50, 100, 150)
+    color2 = Color(50, 100, 150)
     print(f"\nSecond color: {color2}")
     
     color.rgb = color2.gbr  # Assign green, blue, red from color2

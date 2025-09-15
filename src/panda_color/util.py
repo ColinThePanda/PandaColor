@@ -26,7 +26,7 @@ def grayscale(color: Color) -> Color:
     gray = int(0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b)
     return color.__class__(gray, gray, gray)
 
-def mix(color1: Color, color2: Color, factor: float) -> Color:
+def mix(color1: Color, color2: Color, factor: float = 0.5) -> Color:
     """Blend two colors together by factor (0.0–1.0)."""
     factor = max(0.0, min(1.0, factor))
     new_r = int(color1.r * (1 - factor) + color2.r * factor)
@@ -36,9 +36,9 @@ def mix(color1: Color, color2: Color, factor: float) -> Color:
 
 def clamp(color: Color) -> Color:
     """Clamp color values to valid RGB range (0-255)."""
-    r = max(0, min(255, color.r))
-    g = max(0, min(255, color.g))
-    b = max(0, min(255, color.b))
+    r = max(Color.RGB_MIN, min(Color.RGB_MAX, color.r))
+    g = max(Color.RGB_MIN, min(Color.RGB_MAX, color.g))
+    b = max(Color.RGB_MIN, min(Color.RGB_MAX, color.b))
     return color.__class__(r, g, b)
 
 def distance(c1: Color, c2: Color) -> float:

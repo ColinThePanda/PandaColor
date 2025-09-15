@@ -323,5 +323,3 @@ class Colors:
     SKY_BLUE = Color(135, 206, 235)
     GOLD = Color(255, 215, 0)
     SILVER = Color(192, 192, 192)
-
-print(Colors.CORNFLOWER_BLUE)

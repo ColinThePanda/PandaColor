@@ -1,0 +1,16 @@
+from panda_color import Color, Colors, mix, highlight_text
+
+purple = mix(Colors.RED, Colors.BLUE)
+green = mix(Colors.BLUE, Colors.YELLOW)
+print(green)
+print(Colors.BLUE, Colors.YELLOW)
+teal = mix(Colors.BLUE, Colors.GREEN)
+orange = mix(Colors.RED, Colors.YELLOW)
+pink = mix(Colors.RED, Colors.WHITE)
+grey = mix(Colors.BLACK, Colors.WHITE)
+print(highlight_text("This is purple", purple))
+print(highlight_text("This is green", green))
+print(highlight_text("This is teal", teal))
+print(highlight_text("This is orange", orange))
+print(highlight_text("This is pink", pink))
+print(highlight_text("This is grey", grey))
