@@ -1,6 +1,6 @@
-from .rgb import RGB
-from .util import lighten, darken, invert, grayscale, saturate, desaturate, adjust_hue, blend
+from .color import Color
+from .util import lighten, darken, invert, grayscale, blend, clamp, distance
 #from .hex import Hex
 #from .hsv import HSV
 
-__all__ = ['RGB', 'lighten', 'darken', 'invert', 'grayscale', 'saturate', 'desaturate', 'adjust_hue', 'blend']
+__all__ = ['Color', 'lighten', 'darken', 'invert', 'grayscale', 'blend', "clamp", "distance"]
