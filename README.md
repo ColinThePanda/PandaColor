@@ -19,7 +19,7 @@ PandaColor provides an intuitive interface for working with RGB colors, featurin
 ### Color Manipulations
 
 - **Brightness**: `lighten()`, `darken()`
-- **Color operations**: `invert()`, `grayscale()`, `blend()`
+- **Color operations**: `invert()`, `grayscale()`, `mix()`
 - **Utilities**: `clamp()`, `distance()` between colors
 
 ### Output Formats
@@ -92,7 +92,7 @@ print(f"Sky Blue: {Colors.SKY_BLUE.css_rgb()}")     # rgb(135, 206, 235)
 ## Color Manipulations
 
 ```python
-from panda_color import Color, Colors, lighten, darken, invert, grayscale, blend
+from panda_color import Color, Colors, lighten, darken, invert, grayscale, mix
 
 original = Color(100, 150, 200)
 
@@ -105,7 +105,7 @@ inverted = invert(original)         # Color complement
 gray = grayscale(original)          # Grayscale conversion
 
 # Blending colors
-purple = blend(Colors.RED, Colors.BLUE, 0.5)      # 50/50 blend -> Color(127, 0, 127)
+purple = mix(Colors.RED, Colors.BLUE, 0.5)      # 50/50 mix -> Color(127, 0, 127)
 ```
 
 ## Output Formats

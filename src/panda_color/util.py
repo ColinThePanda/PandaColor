@@ -27,12 +27,17 @@ def grayscale(color: Color) -> Color:
     return color.__class__(gray, gray, gray)
 
 def mix(color1: Color, color2: Color, factor: float = 0.5) -> Color:
-    """Blend two colors together by factor (0.0–1.0)."""
+    """GLSL-style mix: linear RGB interpolation (no gamma correction)."""
     factor = max(0.0, min(1.0, factor))
-    new_r = int(color1.r * (1 - factor) + color2.r * factor)
-    new_g = int(color1.g * (1 - factor) + color2.g * factor)
-    new_b = int(color1.b * (1 - factor) + color2.b * factor)
-    return color1.__class__(new_r, new_g, new_b)
+
+    r1, g1, b1 = color1.normalized()
+    r2, g2, b2 = color2.normalized()
+
+    r = r1 * (1 - factor) + r2 * factor
+    g = g1 * (1 - factor) + g2 * factor
+    b = b1 * (1 - factor) + b2 * factor
+
+    return Color.from_normalized(r, g, b)
 
 def clamp(color: Color) -> Color:
     """Clamp color values to valid RGB range (0-255)."""
