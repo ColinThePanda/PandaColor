@@ -254,6 +254,42 @@ class Color:
     def to_dict(self) -> dict:
         return {"r": self._r, "g": self._g, "b": self._b}
 
+    def to_bytesv3_32(self) -> bytes:
+        """Convert to 3 32-bit floats (RGB) in little-endian format.
+        Note: Some precision loss is normal when converting to 32-bit floats."""
+        from struct import pack
+        return pack('<3f', *self.normalized())
+
+    def to_bytesv4_32(self, alpha: float = 1.0) -> bytes:
+        """Convert to 4 32-bit floats (RGBA) in little-endian format.
+        Note: Some precision loss is normal when converting to 32-bit floats."""
+        from struct import pack
+        # Clamp alpha to [0.0, 1.0] range
+        alpha = max(0.0, min(1.0, alpha))
+        return pack('<4f', *self.normalized(), alpha)
+
+    def to_bytesv3_64(self) -> bytes:
+        """Convert to 3 64-bit doubles (RGB) for higher precision."""
+        from struct import pack
+        return pack('<3d', *self.normalized())
+
+    def to_bytesv4_64(self, alpha: float = 1.0) -> bytes:
+        """Convert to 4 64-bit doubles (RGBA) for higher precision."""
+        from struct import pack
+        alpha = max(0.0, min(1.0, alpha))
+        return pack('<4d', *self.normalized(), alpha)
+
+    def to_bytesv3_u8(self) -> bytes:
+        """Convert to 3 unsigned bytes (RGB)."""
+        from struct import pack
+        return pack('3B', self._r, self._g, self._b)
+
+    def to_bytesv4_u8(self, alpha: int = 255) -> bytes:
+        """Convert to 4 unsigned bytes (RGBA)."""
+        from struct import pack
+        alpha = max(0, min(255, int(alpha)))
+        return pack('4B', self._r, self._g, self._b, alpha)
+
     def css_rgb(self) -> str:
         return f"rgb({self._r}, {self._g}, {self._b})"
 
