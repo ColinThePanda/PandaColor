@@ -1,4 +1,4 @@
-from PandaColor.rgb import RGB
+from panda_color import RGB
 
 if __name__ == "__main__":
     color = RGB(99, 149, 238) # Cornflower Blue

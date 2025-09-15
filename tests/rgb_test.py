@@ -1,4 +1,4 @@
-from PandaColor import RGB
+from panda_color import RGB
 
 if __name__ == "__main__":
     color = RGB(255, 128, 64)
