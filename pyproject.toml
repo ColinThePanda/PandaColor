@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "panda-color"
-version = "0.1.3.2"
+version = "0.1.4"
 description = "A color library that supports RGB with swizzling and will support hex and hsv in the future"
 readme = "README.md"
-license = "MIT"  # SPDX identifier
+license = "MIT"
 authors = [
   { name = "Colin Politi", email = "urboycolinthepanda@gmail.com" }
 ]
@@ -19,7 +19,7 @@ classifiers = [
   "Operating System :: OS Independent"
 ]
 
-license-files = ["LICENSE"]  # <-- moved here
+license-files = ["LICENSE"]
 
 [project.urls]
 "Homepage" = "https://github.com/ColinThePanda/PandaColor"

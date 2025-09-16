@@ -14,7 +14,7 @@ PandaColor provides an intuitive interface for working with RGB colors, featurin
 - **GLSL-style swizzling**: Access components with `.r`, `.g`, `.b`, `.rgb`, `.rg`, `.gbr`, etc.
 - **Comprehensive validation**: Type checking and range validation for all color values
 - **Immutable variants**: Create new colors with `with_red()`, `with_green()`, `with_blue()`
-- **Predefined color constants**: 36 common colors ready to use
+- **Predefined color constants**: 35 common colors ready to use
 
 ### Color Manipulations
 
@@ -26,6 +26,7 @@ PandaColor provides an intuitive interface for working with RGB colors, featurin
 
 - **Web formats**: CSS `rgb()`, `rgba()`, hex strings
 - **Data formats**: tuples, lists, dictionaries, normalized floats
+- **Binary formats**: Various byte representations for graphics programming
 - **Terminal colors**: ANSI escape sequences with truecolor and 256-color fallback
 - **Luminance calculation**: sRGB standard relative luminance
 
@@ -68,7 +69,7 @@ print(Colors.BLUE.css_rgb())   # rgb(0, 0, 255)
 
 # GLSL-style swizzling
 print(color1.r)       # 255
-print(color1.rgb)     # Color(255, 128, 0)
+print(color1.rgb)     # (255, 128, 0)
 print(color1.rg)      # (255, 128)
 print(color1.gbr)     # (128, 0, 255)
 
@@ -79,12 +80,27 @@ color1.gb = [64, 32]  # Set green and blue components
 
 ## Predefined Color Constants
 
-PandaColor includes 36 predefined colors for immediate use:
+PandaColor includes 35 predefined colors for immediate use:
 
 ```python
 from panda_color import Colors
 
-# Use them directly
+# Basic colors
+Colors.BLACK, Colors.WHITE, Colors.RED, Colors.GREEN, Colors.BLUE
+Colors.YELLOW, Colors.CYAN, Colors.MAGENTA
+
+# Extended palette
+Colors.ORANGE, Colors.PINK, Colors.PURPLE, Colors.BROWN, Colors.LIME
+Colors.TEAL, Colors.NAVY, Colors.OLIVE, Colors.MAROON, Colors.AQUA
+Colors.CRIMSON, Colors.CORNFLOWER_BLUE, Colors.DARK_ORANGE
+Colors.DARK_GREEN, Colors.DARK_RED, Colors.STEEL_BLUE
+Colors.DARK_SLATE_GRAY, Colors.MEDIUM_PURPLE, Colors.FIREBRICK
+Colors.SALMON, Colors.LIME_GREEN, Colors.SKY_BLUE, Colors.GOLD
+Colors.SILVER
+
+# Grayscale
+Colors.GRAY, Colors.LIGHT_GRAY, Colors.DARK_GRAY
+
 print(f"Crimson: {Colors.CRIMSON.to_hex()}")        # #dc143c
 print(f"Sky Blue: {Colors.SKY_BLUE.css_rgb()}")     # rgb(135, 206, 235)
 ```
@@ -124,6 +140,12 @@ print(Colors.ORANGE.to_list())          # [255, 165, 0]
 print(Colors.ORANGE.to_dict())          # {'r': 255, 'g': 165, 'b': 0}
 print(Colors.ORANGE.normalized())       # (1.0, 0.6470588235294118, 0.0)
 
+# Binary formats for graphics programming
+print(Colors.ORANGE.to_bytesv3_u8())    # b'\xff\xa5\x00'
+print(Colors.ORANGE.to_bytesv4_u8())    # b'\xff\xa5\x00\xff'
+print(Colors.ORANGE.to_bytesv3_32())    # 32-bit floats (little-endian)
+print(Colors.ORANGE.to_bytesv3_64())    # 64-bit doubles (little-endian)
+
 # Properties
 print(Colors.ORANGE.luminance)          # 0.5515... (relative luminance)
 ```
@@ -134,11 +156,11 @@ print(Colors.ORANGE.luminance)          # 0.5515... (relative luminance)
 from panda_color import Colors, color_text, highlight_text
 
 # Colored text output (with automatic fallback support)
-print(color_text(Colors.RED, "This text is red!"))
-print(highlight_text(Colors.GREEN, "This has a green background!"))
+print(color_text("This text is red!", Colors.RED))
+print(highlight_text("This has a green background!", Colors.GREEN))
 
 # Combine with predefined colors
-print(color_text(Colors.BLUE, "Blue text"))
+print(color_text("Blue text", Colors.BLUE))
 ```
 
 ## Sequence Protocol
@@ -195,7 +217,7 @@ light_blue = Colors.BLUE.with_green(128) # Color(0, 128, 255) - lighter blue
 #### Properties
 
 - `.r`, `.g`, `.b` - Individual components (with setters)
-- `.rgb` - RGB as Color object (with setter)
+- `.rgb` - RGB as tuple (with setter)
 - `.luminance` - Relative luminance (0.0-1.0)
 
 #### Methods
@@ -207,13 +229,16 @@ light_blue = Colors.BLUE.with_green(128) # Color(0, 128, 255) - lighter blue
 - `.css_rgb()` - CSS rgb() format
 - `.css_rgba(alpha)` - CSS rgba() format
 - `.normalized()` - Normalized floats (0.0-1.0)
+- `.to_bytesv3_u8()`, `.to_bytesv4_u8()` - Unsigned byte formats
+- `.to_bytesv3_32()`, `.to_bytesv4_32()` - 32-bit float formats
+- `.to_bytesv3_64()`, `.to_bytesv4_64()` - 64-bit double formats
 - `.with_red(r)`, `.with_green(g)`, `.with_blue(b)` - Immutable variants
 
 ### Utility Functions
 
 ```python
 from panda_color import (
-    lighten, darken, invert, grayscale, blend, clamp, distance,
+    lighten, darken, invert, grayscale, mix, clamp, distance,
     color_text, highlight_text, to_ansi256
 )
 
@@ -221,59 +246,14 @@ lighten(color, factor)          # Lighten by factor (0.0-1.0)
 darken(color, factor)           # Darken by factor (0.0-1.0)
 invert(color)                   # Color complement
 grayscale(color)                # Grayscale conversion
-blend(color1, color2, factor)   # Blend two colors
+mix(color1, color2, factor)     # Mix two colors (GLSL-style linear interpolation)
 clamp(color)                    # Clamp to valid RGB range
 distance(color1, color2)        # Euclidean distance in RGB space
 
 # Terminal output
-color_text(color, text)         # Colored text (foreground)
-highlight_text(color, text)     # Highlighted text (background)
+color_text(text, color)         # Colored text (foreground)
+highlight_text(text, color)     # Highlighted text (background)
 to_ansi256(color)              # Convert to ANSI 256-color code
-```
-
-### Color Constants
-
-All predefined colors are available as constants:
-
-```python
-from panda_color import Colors
-Colors.BLACK
-Colors.WHITE
-Colors.RED
-Colors.GREEN
-Colors.BLUE
-Colors.YELLOW
-Colors.CYAN
-Colors.MAGENTA
-Colors.GRAY
-Colors.LIGHT_GRAY
-Colors.DARK_GRAY
-Colors.ORANGE
-Colors.PINK
-Colors.PURPLE
-Colors.BROWN
-Colors.LIME
-Colors.TEAL
-Colors.NAVY
-Colors.OLIVE
-Colors.MAROON
-Colors.AQUA
-Colors.CRIMSON
-Colors.CORNFLOWER_BLUE
-Colors.DARK_ORANGE
-Colors.DARK_GREEN
-DARK_RED
-Colors.STEEL_BLUE
-Colors.DARK_SLATE_GRAY
-Colors.MEDIUM_PURPLE
-Colors.FIREBRICK
-Colors.SALMON
-Colors.LIME_GREEN
-Colors.SKY_BLUE
-Colors.GOLD
-Colors.SILVER
-
-
 ```
 
 ---
@@ -299,9 +279,22 @@ print(f"Accent: {accent.css_rgb()}")        # rgb(0, 0, 178)
 ```python
 from panda_color import Colors, color_text
 
-print(color_text(Colors.RED, "❌ Error: Something went wrong"))
-print(color_text(Colors.GREEN, "✅ Success: Operation completed"))
-print(color_text(Colors.YELLOW, "⚠️  Warning: Check your input"))
+print(color_text("❌ Error: Something went wrong", Colors.RED))
+print(color_text("✅ Success: Operation completed", Colors.GREEN))
+print(color_text("⚠️  Warning: Check your input", Colors.YELLOW))
+```
+
+### Graphics Programming
+
+```python
+from panda_color import Color
+
+color = Color(255, 128, 64)
+
+# Export to various binary formats
+vertex_data = color.to_bytesv3_32()    # For OpenGL vertex attributes
+texture_data = color.to_bytesv4_u8()   # For RGBA textures
+uniform_data = color.to_bytesv3_64()   # For high-precision uniforms
 ```
 
 ### Color Analysis
@@ -321,9 +314,9 @@ print(f"Grayscale: {grayscale(color1).to_hex()}")
 
 ## Roadmap
 
-- Integration utilities for OpenGL/shader workflows
 - HSV and HSL color space support
 - Auto-generated color palettes
+- Color Pickers
 
 ---
 

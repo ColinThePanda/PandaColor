@@ -1,4 +1,4 @@
-from panda_color import Color, Colors
+from panda_color import Colors
 
 color = Colors.CORNFLOWER_BLUE
 

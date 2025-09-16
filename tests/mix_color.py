@@ -1,4 +1,4 @@
-from panda_color import Color, Colors, mix, highlight_text
+from panda_color import Colors, mix, highlight_text
 
 purple = mix(Colors.RED, Colors.BLUE)
 teal = mix(Colors.BLUE, Colors.GREEN)
