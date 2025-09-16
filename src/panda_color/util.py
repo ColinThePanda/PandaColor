@@ -97,3 +97,12 @@ def highlight_text(text: str, color: Color) -> str:
         return f"\033[48;5;{to_ansi256(color)}m{text}\033[0m"
     else:
         return text
+
+def color_and_highlight(text: str, fg: Color, bg: Color) -> str:
+    """Apply color to text foreground and background with automatic terminal capability detection."""
+    if _supports_truecolor_env():
+        return f"\033[38;2;{fg.r};{fg.g};{fg.b}m\033[48;2;{bg.r};{bg.g};{bg.b}m{text}\033[0m"
+    elif _supports_256color():
+        return f"\033[38;5;{to_ansi256(fg)}m\033[48;5;{to_ansi256(bg)}m{text}\033[0m"
+    else:
+        return text
