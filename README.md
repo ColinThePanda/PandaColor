@@ -153,14 +153,12 @@ print(Colors.ORANGE.luminance)          # 0.5515... (relative luminance)
 ## Terminal Colors
 
 ```python
-from panda_color import Colors, color_text, highlight_text
+from panda_color import Colors, color_text, highlight_text, color_highlight_text
 
 # Colored text output (with automatic fallback support)
 print(color_text("This text is red!", Colors.RED))
 print(highlight_text("This has a green background!", Colors.GREEN))
-
-# Combine with predefined colors
-print(color_text("Blue text", Colors.BLUE))
+print(color_highlight_text("This has red text and a green background!", Colors.RED, Colors.GREEN))
 ```
 
 ## Sequence Protocol
@@ -242,18 +240,19 @@ from panda_color import (
     color_text, highlight_text, to_ansi256
 )
 
-lighten(color, factor)          # Lighten by factor (0.0-1.0)
-darken(color, factor)           # Darken by factor (0.0-1.0)
-invert(color)                   # Color complement
-grayscale(color)                # Grayscale conversion
-mix(color1, color2, factor)     # Mix two colors (GLSL-style linear interpolation)
-clamp(color)                    # Clamp to valid RGB range
-distance(color1, color2)        # Euclidean distance in RGB space
+lighten(color, factor)             # Lighten by factor (0.0-1.0)
+darken(color, factor)              # Darken by factor (0.0-1.0)
+invert(color)                      # Color complement
+grayscale(color)                   # Grayscale conversion
+mix(color1, color2, factor)        # Mix two colors (GLSL-style linear interpolation)
+clamp(color)                       # Clamp to valid RGB range
+distance(color1, color2)           # Euclidean distance in RGB space
 
 # Terminal output
-color_text(text, color)         # Colored text (foreground)
-highlight_text(text, color)     # Highlighted text (background)
-to_ansi256(color)              # Convert to ANSI 256-color code
+color_text(text, color)            # Colored text (foreground)
+highlight_text(text, color)        # Highlighted text (background)
+color_highlight_text(text, fg, bg) # Colored and highlighted text (foreground + background)
+to_ansi256(color)                  # Convert to ANSI 256-color code
 ```
 
 ---

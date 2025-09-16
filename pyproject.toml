@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "panda-color"
-version = "0.1.4.1"
+version = "0.1.4.1.1"
 description = "A color library that supports RGB with swizzling and will support hex and hsv in the future"
 readme = "README.md"
 license = "MIT"
