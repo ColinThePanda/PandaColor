@@ -1,9 +1,10 @@
-from typing import Iterable, Tuple, Any, Iterator
+from typing import Iterable, Tuple, Any, Iterator, Union, Sequence
 import numbers
 import random
 
+Number = Union[int, float]
 
-class Color:
+class Color(Sequence[int]): # inherits from Sequence[int] for compatablitiy with things like pygame
     RGB_MIN = 0
     RGB_MAX = 255
 
@@ -56,9 +57,9 @@ class Color:
         self._g = self._validate_color_value(g, "green")
         self._b = self._validate_color_value(b, "blue")
 
-    def _validate_color_value(self, value: Any, color_name: str = "color") -> int:
+    def _validate_color_value(self, value: Number, color_name: str = "color") -> int:
         """Validate and convert color value to integer in range [0, 255]."""
-        if not isinstance(value, numbers.Real):
+        if not isinstance(value, Number):
             raise TypeError(
                 f"{color_name} value must be numeric, got {type(value).__name__}"
             )
@@ -246,58 +247,58 @@ class Color:
 
     # === EXTRA UTILITIES ===
     def to_tuple(self) -> Tuple[int, int, int]:
+        """Converts Color to Tuple"""
         return (self._r, self._g, self._b)
 
     def to_list(self) -> list:
+        """Converts Color to List"""
         return [self._r, self._g, self._b]
 
     def to_dict(self) -> dict:
+        """Converts Color to Dictionary"""
         return {"r": self._r, "g": self._g, "b": self._b}
-
-    def to_bytesv3_32(self) -> bytes:
-        """Convert to 3 32-bit floats (RGB) in little-endian format.
-        Note: Some precision loss is normal when converting to 32-bit floats."""
+    
+    def to_bytes(self, num_parts : int = 3, num_type : str = "f32", big_endian : bool = False, alpha : float = 1.0) -> bytes:
+        """Converts Color to Bytes"""
         from struct import pack
-        return pack('<3f', *self.normalized())
-
-    def to_bytesv4_32(self, alpha: float = 1.0) -> bytes:
-        """Convert to 4 32-bit floats (RGBA) in little-endian format.
-        Note: Some precision loss is normal when converting to 32-bit floats."""
-        from struct import pack
-        # Clamp alpha to [0.0, 1.0] range
-        alpha = max(0.0, min(1.0, alpha))
-        return pack('<4f', *self.normalized(), alpha)
-
-    def to_bytesv3_64(self) -> bytes:
-        """Convert to 3 64-bit doubles (RGB) for higher precision."""
-        from struct import pack
-        return pack('<3d', *self.normalized())
-
-    def to_bytesv4_64(self, alpha: float = 1.0) -> bytes:
-        """Convert to 4 64-bit doubles (RGBA) for higher precision."""
-        from struct import pack
-        alpha = max(0.0, min(1.0, alpha))
-        return pack('<4d', *self.normalized(), alpha)
-
-    def to_bytesv3_u8(self) -> bytes:
-        """Convert to 3 unsigned bytes (RGB)."""
-        from struct import pack
-        return pack('3B', self._r, self._g, self._b)
-
-    def to_bytesv4_u8(self, alpha: int = 255) -> bytes:
-        """Convert to 4 unsigned bytes (RGBA)."""
-        from struct import pack
-        alpha = max(0, min(255, int(alpha)))
-        return pack('4B', self._r, self._g, self._b, alpha)
+        
+        endian : str = ">" if big_endian else "<"
+        type_map = {
+            'f32' : 'f',
+            'f64' : 'd',
+            'u8' : 'B',
+        }
+        
+        type : str = type_map[num_type]
+        
+        packing_str = f"{endian}{num_parts}{type}"
+        
+        if num_type == 'u8':
+            packing_data = self.rgb
+            if num_parts == 4:
+                alpha = int(alpha * 255)
+        else:
+            packing_data = self.normalized()
+            
+        
+        if num_parts == 3:
+            return pack(packing_str, *packing_data)
+        elif num_parts == 4:
+            return pack(packing_str, *packing_data, alpha)
+        else:
+            raise TypeError("Argument num_parts in Color.to_bytes() must be either 3 or 4")
 
     def css_rgb(self) -> str:
+        """Converts Color to a css rgb string"""
         return f"rgb({self._r}, {self._g}, {self._b})"
 
     def css_rgba(self, alpha: float = 1.0) -> str:
+        """Converts Color to a css rgba string"""
         alpha = max(0.0, min(1.0, alpha))
         return f"rgba({self._r}, {self._g}, {self._b}, {alpha})"
 
     def normalized(self) -> Tuple[float, float, float]:
+        """Converts Color to noramalized Color (0-1)"""
         return (self._r / 255.0, self._g / 255.0, self._b / 255.0)
 
     @property
@@ -313,17 +314,21 @@ class Color:
 
     # === VARIANT CREATORS ===
     def with_red(self, r: int) -> "Color":
+        """Update the r value of a Color"""
         return Color(r, self._g, self._b)
 
     def with_green(self, g: int) -> "Color":
+        """Update the g value of a Color"""
         return Color(self._r, g, self._b)
 
     def with_blue(self, b: int) -> "Color":
+        """Update the b value of a Color"""
         return Color(self._r, self._g, b)
 
 
 # === CONSTANT COLORS ===
 class Colors:
+    """A class containing constants of common colors"""
     BLACK = Color(0, 0, 0)
     WHITE = Color(255, 255, 255)
     RED = Color(255, 0, 0)

@@ -227,9 +227,7 @@ light_blue = Colors.BLUE.with_green(128) # Color(0, 128, 255) - lighter blue
 - `.css_rgb()` - CSS rgb() format
 - `.css_rgba(alpha)` - CSS rgba() format
 - `.normalized()` - Normalized floats (0.0-1.0)
-- `.to_bytesv3_u8()`, `.to_bytesv4_u8()` - Unsigned byte formats
-- `.to_bytesv3_32()`, `.to_bytesv4_32()` - 32-bit float formats
-- `.to_bytesv3_64()`, `.to_bytesv4_64()` - 64-bit double formats
+- `.to_bytes()` - Color as bytest (supports rgb and rgba with f32, f64, u8)
 - `.with_red(r)`, `.with_green(g)`, `.with_blue(b)` - Immutable variants
 
 ### Utility Functions
@@ -291,9 +289,9 @@ from panda_color import Color
 color = Color(255, 128, 64)
 
 # Export to various binary formats
-vertex_data = color.to_bytesv3_32()    # For OpenGL vertex attributes
-texture_data = color.to_bytesv4_u8()   # For RGBA textures
-uniform_data = color.to_bytesv3_64()   # For high-precision uniforms
+vertex_data = color.to_bytes(3, 'f32')    # For OpenGL vertex attributes
+texture_data = color.to_bytes(4, 'u8')   # For RGBA textures
+uniform_data = color.to_bytes(3, 'f64')   # For high-precision uniforms
 ```
 
 ### Color Analysis
