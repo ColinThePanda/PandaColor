@@ -1,43 +1,44 @@
-from typing import Iterable, Tuple, Any, Iterator, Union, Sequence
-import numbers
+from typing import Iterable, Tuple, Any, Iterator, Union, overload, cast, Tuple
+from collections.abc import Sequence
 import random
+from pygame import Color as col
 
 Number = Union[int, float]
 
-class Color(Sequence[int]): # inherits from Sequence[int] for compatablitiy with things like pygame
+class Color(Sequence[int]):
     RGB_MIN = 0
     RGB_MAX = 255
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any):
+        # Your existing implementation with added casts
         if len(args) == 0:
-            # Default to black
             self._r, self._g, self._b = 0, 0, 0
         elif len(args) == 1:
-            self._init_single_arg(args[0])
+            arg = args[0]
+            if isinstance(arg, Color):
+                color = cast(Tuple[int, int, int], arg)
+                self._r, self._g, self._b = color
+            elif isinstance(arg, str):
+                self._init_str(arg)
+            elif hasattr(arg, "__iter__") and not isinstance(arg, (str, bytes)):
+                iterable_color = cast(Iterable[int], arg)
+                self._init_iter(iterable_color)
+            else:
+                raise TypeError(f"Cannot initialize Color from {type(arg).__name__}")
         elif len(args) == 3:
-            self._init_three_args(*args)
+            r, g, b = cast(Tuple[int, int, int], args)
+            self._r = self._validate_color_value(r)
+            self._g = self._validate_color_value(g)
+            self._b = self._validate_color_value(b)
         else:
             raise ValueError(f"Color() takes 0, 1, or 3 arguments ({len(args)} given)")
-
-    def _init_single_arg(self, arg):
-        if isinstance(arg, Color):
-            # Copy constructor
-            self._r, self._g, self._b = arg._r, arg._g, arg._b
-        elif isinstance(arg, str):
-            # Parse string like "255,128,0"
-            self._init_str(arg)
-        elif hasattr(arg, "__iter__") and not isinstance(arg, (str, bytes)):
-            # Handle iterables (list, tuple, etc.)
-            self._init_iter(arg)
-        else:
-            raise TypeError(f"Cannot initialize Color from {type(arg).__name__}")
 
     def _init_str(self, color_str: str):
         try:
             values = [int(x.strip()) for x in color_str.split(",")]
             if len(values) != 3:
                 raise ValueError("String must contain exactly 3 comma-separated values")
-            self._init_three_args(*values)
+            self._r, self._g, self._b = [self._validate_color_value(v) for v in values]
         except ValueError as e:
             raise ValueError(f"Invalid Color string format: {e}")
 
@@ -48,14 +49,9 @@ class Color(Sequence[int]): # inherits from Sequence[int] for compatablitiy with
                 raise ValueError(
                     f"Iterable must contain exactly 3 values, got {len(values)}"
                 )
-            self._init_three_args(*values)
+            self._r, self._g, self._b = [self._validate_color_value(v) for v in values]
         except TypeError:
             raise TypeError("Argument must be iterable")
-
-    def _init_three_args(self, r, g, b):
-        self._r = self._validate_color_value(r, "red")
-        self._g = self._validate_color_value(g, "green")
-        self._b = self._validate_color_value(b, "blue")
 
     def _validate_color_value(self, value: Number, color_name: str = "color") -> int:
         """Validate and convert color value to integer in range [0, 255]."""
@@ -257,36 +253,43 @@ class Color(Sequence[int]): # inherits from Sequence[int] for compatablitiy with
     def to_dict(self) -> dict:
         """Converts Color to Dictionary"""
         return {"r": self._r, "g": self._g, "b": self._b}
-    
-    def to_bytes(self, num_parts : int = 3, num_type : str = "f32", big_endian : bool = False, alpha : float = 1.0) -> bytes:
+
+    def to_bytes(
+        self,
+        num_parts: int = 3,
+        num_type: str = "f32",
+        big_endian: bool = False,
+        alpha: float = 1.0,
+    ) -> bytes:
         """Converts Color to Bytes"""
         from struct import pack
-        
-        endian : str = ">" if big_endian else "<"
+
+        endian: str = ">" if big_endian else "<"
         type_map = {
-            'f32' : 'f',
-            'f64' : 'd',
-            'u8' : 'B',
+            "f32": "f",
+            "f64": "d",
+            "u8": "B",
         }
-        
-        type : str = type_map[num_type]
-        
+
+        type: str = type_map[num_type]
+
         packing_str = f"{endian}{num_parts}{type}"
-        
-        if num_type == 'u8':
+
+        if num_type == "u8":
             packing_data = self.rgb
             if num_parts == 4:
                 alpha = int(alpha * 255)
         else:
             packing_data = self.normalized()
-            
-        
+
         if num_parts == 3:
             return pack(packing_str, *packing_data)
         elif num_parts == 4:
             return pack(packing_str, *packing_data, alpha)
         else:
-            raise TypeError("Argument num_parts in Color.to_bytes() must be either 3 or 4")
+            raise TypeError(
+                "Argument num_parts in Color.to_bytes() must be either 3 or 4"
+            )
 
     def css_rgb(self) -> str:
         """Converts Color to a css rgb string"""
@@ -329,6 +332,7 @@ class Color(Sequence[int]): # inherits from Sequence[int] for compatablitiy with
 # === CONSTANT COLORS ===
 class Colors:
     """A class containing constants of common colors"""
+
     BLACK = Color(0, 0, 0)
     WHITE = Color(255, 255, 255)
     RED = Color(255, 0, 0)
