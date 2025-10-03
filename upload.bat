@@ -1,3 +1,6 @@
+@echo off
+setlocal
+
 echo Uploading to PyPI...
 twine upload dist/*
 
