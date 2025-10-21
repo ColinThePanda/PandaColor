@@ -4,19 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "panda-color"
-version = "0.1.4.3"
+version = "0.1.4.4"
 description = "A color library that supports RGB with swizzling and will support hex and hsv in the future"
 readme = "README.md"
 license = "MIT"
-authors = [
-  { name = "Colin Politi", email = "urboycolinthepanda@gmail.com" }
-]
+authors = [{ name = "Colin Politi", email = "urboycolinthepanda@gmail.com" }]
 requires-python = ">=3.9"
 dependencies = []
 
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Operating System :: OS Independent"
+  "Operating System :: OS Independent",
 ]
 
 license-files = ["LICENSE"]
@@ -26,7 +24,7 @@ license-files = ["LICENSE"]
 "Bug Tracker" = "https://github.com/ColinThePanda/PandaColor/issues"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

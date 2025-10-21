@@ -2,20 +2,19 @@ from typing import Tuple, Iterable, Iterator, Union, overload
 from collections.abc import Sequence
 
 class Color(Sequence[int]):
-    RGB_MIN : int
-    RGB_MAX : int
-    
-    # --- Constructor ---
+    RGB_MIN: int
+    RGB_MAX: int
+
+    # --- Constructor overloads ---
     @overload
     def __init__(self, r: int, g: int, b: int): ...
     @overload
     def __init__(self, color: Iterable[int]): ...
     @overload
     def __init__(self): ...
-    def __init__(self, *args): ...
+    def __init__(self, *args) -> None: ...
 
-    # === SINGLE COMPONENT ACCESS ===
-    # Basic properties (with setters)
+    # === Single component properties ===
     @property
     def r(self) -> int: ...
     @r.setter
@@ -29,8 +28,9 @@ class Color(Sequence[int]):
     @b.setter
     def b(self, value: int) -> None: ...
 
-    # === TWO-COMPONENT SWIZZLES ===
-    # All 2-char permutations
+    # === Two-component swizzles ===
+    @property
+    def rr(self) -> Tuple[int, int]: ...
     @property
     def rg(self) -> Tuple[int, int]: ...
     @rg.setter
@@ -44,6 +44,8 @@ class Color(Sequence[int]):
     @gr.setter
     def gr(self, value: Iterable[int]) -> None: ...
     @property
+    def gg(self) -> Tuple[int, int]: ...
+    @property
     def gb(self) -> Tuple[int, int]: ...
     @gb.setter
     def gb(self, value: Iterable[int]) -> None: ...
@@ -55,17 +57,16 @@ class Color(Sequence[int]):
     def bg(self) -> Tuple[int, int]: ...
     @bg.setter
     def bg(self, value: Iterable[int]) -> None: ...
-
-    # Repeated 2-char patterns
-    @property
-    def rr(self) -> Tuple[int, int]: ...
-    @property
-    def gg(self) -> Tuple[int, int]: ...
     @property
     def bb(self) -> Tuple[int, int]: ...
 
-    # === THREE-COMPONENT SWIZZLES ===
-    # All 3-char permutations
+    # === Three-component swizzles ===
+    @property
+    def rrr(self) -> Tuple[int, int, int]: ...
+    @property
+    def rrg(self) -> Tuple[int, int, int]: ...
+    @property
+    def rrb(self) -> Tuple[int, int, int]: ...
     @property
     def rgb(self) -> Tuple[int, int, int]: ...
     @rgb.setter
@@ -75,6 +76,12 @@ class Color(Sequence[int]):
     @rbg.setter
     def rbg(self, value: Iterable[int]) -> None: ...
     @property
+    def rgg(self) -> Tuple[int, int, int]: ...
+    @property
+    def rbb(self) -> Tuple[int, int, int]: ...
+    @property
+    def grr(self) -> Tuple[int, int, int]: ...
+    @property
     def grb(self) -> Tuple[int, int, int]: ...
     @grb.setter
     def grb(self, value: Iterable[int]) -> None: ...
@@ -83,6 +90,14 @@ class Color(Sequence[int]):
     @gbr.setter
     def gbr(self, value: Iterable[int]) -> None: ...
     @property
+    def ggg(self) -> Tuple[int, int, int]: ...
+    @property
+    def ggb(self) -> Tuple[int, int, int]: ...
+    @property
+    def gbb(self) -> Tuple[int, int, int]: ...
+    @property
+    def brr(self) -> Tuple[int, int, int]: ...
+    @property
     def brg(self) -> Tuple[int, int, int]: ...
     @brg.setter
     def brg(self, value: Iterable[int]) -> None: ...
@@ -90,40 +105,12 @@ class Color(Sequence[int]):
     def bgr(self) -> Tuple[int, int, int]: ...
     @bgr.setter
     def bgr(self, value: Iterable[int]) -> None: ...
-
-    # Repeated 3-char patterns
     @property
-    def rrr(self) -> Tuple[int, int, int]: ...
-    @property
-    def ggg(self) -> Tuple[int, int, int]: ...
-    @property
-    def bbb(self) -> Tuple[int, int, int]: ...
-
-    # Mixed repeated patterns (common ones)
-    @property
-    def rrg(self) -> Tuple[int, int, int]: ...
-    @property
-    def rgg(self) -> Tuple[int, int, int]: ...
-    @property
-    def rrb(self) -> Tuple[int, int, int]: ...
-    @property
-    def rbb(self) -> Tuple[int, int, int]: ...
-    @property
-    def ggr(self) -> Tuple[int, int, int]: ...
-    @property
-    def grr(self) -> Tuple[int, int, int]: ...
-    @property
-    def ggb(self) -> Tuple[int, int, int]: ...
-    @property
-    def gbb(self) -> Tuple[int, int, int]: ...
+    def bbg(self) -> Tuple[int, int, int]: ...
     @property
     def bbr(self) -> Tuple[int, int, int]: ...
     @property
-    def brr(self) -> Tuple[int, int, int]: ...
-    @property
-    def brb(self) -> Tuple[int, int, int]: ...
-    @property
-    def bbg(self) -> Tuple[int, int, int]: ...
+    def bbb(self) -> Tuple[int, int, int]: ...
     @property
     def bgg(self) -> Tuple[int, int, int]: ...
 
@@ -137,10 +124,17 @@ class Color(Sequence[int]):
     def to_tuple(self) -> Tuple[int, int, int]: ...
     def to_list(self) -> list[int]: ...
     def to_dict(self) -> dict[str, int]: ...
-    def to_bytes(self, num_parts : int = 3, num_type : str = "f32", big_endian : bool = False, alpha : float = 1.0) -> bytes: ...
+    def to_bytes(
+        self,
+        num_parts: int = 3,
+        num_type: str = "f32",
+        big_endian: bool = False,
+        alpha: float = 1.0,
+    ) -> bytes: ...
     def css_rgb(self) -> str: ...
     def css_rgba(self, alpha: float = 1.0) -> str: ...
     def normalized(self) -> Tuple[float, float, float]: ...
+    def int24(self) -> int: ...
     @property
     def luminance(self) -> float: ...
 
@@ -149,6 +143,8 @@ class Color(Sequence[int]):
     def from_hex(cls, hex_string: str) -> "Color": ...
     @classmethod
     def from_normalized(cls, r: float, g: float, b: float) -> "Color": ...
+    @classmethod
+    def from_int24(cls, packed: int) -> "Color": ...
     @classmethod
     def random(cls) -> "Color": ...
 
@@ -166,38 +162,38 @@ class Color(Sequence[int]):
     def __hash__(self) -> int: ...
 
 class Colors:
-    BLACK : Color
-    WHITE : Color
-    RED : Color
-    GREEN : Color
-    BLUE : Color
-    YELLOW : Color
-    CYAN : Color
-    MAGENTA : Color
-    GRAY : Color
-    LIGHT_GRAY : Color
-    DARK_GRAY : Color
-    ORANGE : Color
-    PINK : Color
-    PURPLE : Color
-    BROWN : Color
-    LIME : Color
-    TEAL : Color
-    NAVY : Color
-    OLIVE : Color
-    MAROON : Color
-    AQUA : Color
-    CRIMSON : Color
-    CORNFLOWER_BLUE : Color
-    DARK_ORANGE : Color
-    DARK_GREEN : Color
-    DARK_RED : Color
-    STEEL_BLUE : Color
-    DARK_SLATE_GRAY : Color
-    MEDIUM_PURPLE : Color
-    FIREBRICK : Color
-    SALMON : Color
-    LIME_GREEN : Color
-    SKY_BLUE : Color
-    GOLD : Color
-    SILVER : Color
+    BLACK: Color
+    WHITE: Color
+    RED: Color
+    GREEN: Color
+    BLUE: Color
+    YELLOW: Color
+    CYAN: Color
+    MAGENTA: Color
+    GRAY: Color
+    LIGHT_GRAY: Color
+    DARK_GRAY: Color
+    ORANGE: Color
+    PINK: Color
+    PURPLE: Color
+    BROWN: Color
+    LIME: Color
+    TEAL: Color
+    NAVY: Color
+    OLIVE: Color
+    MAROON: Color
+    AQUA: Color
+    CRIMSON: Color
+    CORNFLOWER_BLUE: Color
+    DARK_ORANGE: Color
+    DARK_GREEN: Color
+    DARK_RED: Color
+    STEEL_BLUE: Color
+    DARK_SLATE_GRAY: Color
+    MEDIUM_PURPLE: Color
+    FIREBRICK: Color
+    SALMON: Color
+    LIME_GREEN: Color
+    SKY_BLUE: Color
+    GOLD: Color
+    SILVER: Color

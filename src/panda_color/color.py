@@ -1,155 +1,125 @@
-from typing import Iterable, Tuple, Any, Iterator, Union, overload, cast, Tuple
+from typing import Iterable, Tuple, Any, Iterator, Union
 from collections.abc import Sequence
 import random
-from pygame import Color as col
 
 Number = Union[int, float]
+
 
 class Color(Sequence[int]):
     RGB_MIN = 0
     RGB_MAX = 255
 
     def __init__(self, *args: Any):
-        # Your existing implementation with added casts
         if len(args) == 0:
             self._r, self._g, self._b = 0, 0, 0
         elif len(args) == 1:
-            arg = args[0]
-            if isinstance(arg, Color):
-                color = cast(Tuple[int, int, int], arg)
-                self._r, self._g, self._b = color
-            elif isinstance(arg, str):
-                self._init_str(arg)
-            elif hasattr(arg, "__iter__") and not isinstance(arg, (str, bytes)):
-                iterable_color = cast(Iterable[int], arg)
-                self._init_iter(iterable_color)
-            else:
-                raise TypeError(f"Cannot initialize Color from {type(arg).__name__}")
+            self._init_single(args[0])
         elif len(args) == 3:
-            r, g, b = cast(Tuple[int, int, int], args)
-            self._r = self._validate_color_value(r)
-            self._g = self._validate_color_value(g)
-            self._b = self._validate_color_value(b)
+            self._r, self._g, self._b = [
+                self._validate_color_value(v, name)
+                for v, name in zip(args, ["red", "green", "blue"])
+            ]
         else:
             raise ValueError(f"Color() takes 0, 1, or 3 arguments ({len(args)} given)")
 
+    def _init_single(self, arg: Any):
+        if isinstance(arg, Color):
+            self._r, self._g, self._b = arg._r, arg._g, arg._b
+        elif isinstance(arg, str):
+            self._init_str(arg)
+        elif isinstance(arg, Iterable) and not isinstance(arg, (str, bytes)):
+            self._init_iter(arg)
+        else:
+            raise TypeError(f"Cannot initialize Color from {type(arg).__name__}")
+
     def _init_str(self, color_str: str):
         try:
-            values = [int(x.strip()) for x in color_str.split(",")]
-            if len(values) != 3:
-                raise ValueError("String must contain exactly 3 comma-separated values")
-            self._r, self._g, self._b = [self._validate_color_value(v) for v in values]
-        except ValueError as e:
-            raise ValueError(f"Invalid Color string format: {e}")
+            parts = [int(x.strip()) for x in color_str.split(",")]
+            if len(parts) != 3:
+                raise ValueError("Expected 3 comma-separated values")
+            self._r, self._g, self._b = [
+                self._validate_color_value(v, name)
+                for v, name in zip(parts, ["red", "green", "blue"])
+            ]
+        except Exception as e:
+            raise ValueError(f"Invalid color string '{color_str}': {e}")
 
-    def _init_iter(self, iterable):
-        try:
-            values = list(iterable)
-            if len(values) != 3:
-                raise ValueError(
-                    f"Iterable must contain exactly 3 values, got {len(values)}"
-                )
-            self._r, self._g, self._b = [self._validate_color_value(v) for v in values]
-        except TypeError:
-            raise TypeError("Argument must be iterable")
-
-    def _validate_color_value(self, value: Number, color_name: str = "color") -> int:
-        """Validate and convert color value to integer in range [0, 255]."""
-        if not isinstance(value, Number):
-            raise TypeError(
-                f"{color_name} value must be numeric, got {type(value).__name__}"
-            )
-
-        int_value = int(value)
-
-        if not (self.RGB_MIN <= int_value <= self.RGB_MAX):
+    def _init_iter(self, iterable: Iterable[Any]):
+        values = list(iterable)
+        if len(values) != 3:
             raise ValueError(
-                f"{color_name} value must be in range [{self.RGB_MIN}, {self.RGB_MAX}], got {int_value}"
+                f"Iterable must contain exactly 3 values, got {len(values)}"
             )
+        self._r, self._g, self._b = [
+            self._validate_color_value(v, name)
+            for v, name in zip(values, ["red", "green", "blue"])
+        ]
 
-        return int_value
+    def _validate_color_value(self, value: Any, name: str = "color") -> int:
+        if not isinstance(value, (int, float)):
+            raise TypeError(f"{name} must be a number, got {type(value).__name__}")
+        value = int(value)
+        if not (self.RGB_MIN <= value <= self.RGB_MAX):
+            raise ValueError(
+                f"{name} must be in [{self.RGB_MIN}, {self.RGB_MAX}], got {value}"
+            )
+        return value
 
     def _get_component(self, char: str) -> int:
-        """Get color component by swizzle character (r/g/b)."""
-        if char == "r":
-            return self._r
-        elif char == "g":
-            return self._g
-        elif char == "b":
-            return self._b
-        else:
-            raise ValueError(f"Invalid swizzle character: {char}")
+        return {"r": self._r, "g": self._g, "b": self._b}[char]
 
     def _set_component(self, char: str, value: int):
-        """Set color component by swizzle character (r/g/b)."""
-        validated_value = self._validate_color_value(value, char)
+        validated = self._validate_color_value(value, char)
         if char == "r":
-            self._r = validated_value
+            self._r = validated
         elif char == "g":
-            self._g = validated_value
+            self._g = validated
         elif char == "b":
-            self._b = validated_value
+            self._b = validated
         else:
-            raise ValueError(f"Invalid swizzle character: {char}")
+            raise ValueError(f"Invalid component: {char}")
 
     def __getattr__(self, name: str):
-        """Handle GLSL-style swizzling access like .rgb, .rg, .gbr, etc."""
         if all(c in "rgb" for c in name):
             if len(name) == 1:
                 return self._get_component(name)
-            else:
-                return tuple(self._get_component(c) for c in name)
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
+            return tuple(self._get_component(c) for c in name)
+        raise AttributeError(f"'Color' object has no attribute '{name}'")
 
-    def __setattr__(self, name: str, value):
-        """Handle GLSL-style swizzling assignment like .rgb = (255, 128, 0)."""
+    def __setattr__(self, name: str, value: Any):
         if name.startswith("_"):
-            object.__setattr__(self, name, value)
-            return
-
-        if all(c in "rgb" for c in name):
+            super().__setattr__(name, value)
+        elif all(c in "rgb" for c in name):
             if len(name) == 1:
-                # Single component assignment: .r = 255
                 self._set_component(name, value)
             else:
-                # Multi-component assignment: .rgb = (255, 128, 0)
-                if not hasattr(value, "__iter__") or isinstance(value, (str, bytes)):
+                if not isinstance(value, Iterable) or isinstance(value, (str, bytes)):
                     raise TypeError(
-                        f"Cannot assign {type(value).__name__} to swizzle pattern '{name}'"
+                        f"Expected iterable of values for '{name}', got {type(value).__name__}"
                     )
-
                 values = list(value)
                 if len(values) != len(name):
-                    raise ValueError(
-                        f"Cannot assign {len(values)} values to {len(name)} components"
-                    )
-
-                for char, val in zip(name, values):
-                    self._set_component(char, val)
+                    raise ValueError(f"Expected {len(name)} values, got {len(values)}")
+                for c, v in zip(name, values):
+                    self._set_component(c, v)
         else:
-            object.__setattr__(self, name, value)
+            super().__setattr__(name, value)
 
-    # === PROPERTIES ===
+    # === Properties ===
     @property
     def r(self) -> int:
-        """Red component (0–255)."""
         return self._r
 
     @property
     def g(self) -> int:
-        """Green component (0–255)."""
         return self._g
 
     @property
     def b(self) -> int:
-        """Blue component (0–255)."""
         return self._b
 
     @property
     def rgb(self) -> "Color":
-        """RGB values as a tuple."""
         return Color(self._r, self._g, self._b)
 
     @r.setter
@@ -166,92 +136,20 @@ class Color(Sequence[int]):
 
     @rgb.setter
     def rgb(self, value: Iterable[int]):
-        values = list(value)
-        if len(values) != 3:
-            raise ValueError(f"Color requires exactly 3 values, got {len(values)}")
-        self._r, self._g, self._b = [
-            self._validate_color_value(v, ["red", "green", "blue"][i])
-            for i, v in enumerate(values)
-        ]
+        r, g, b = list(value)
+        self.r, self.g, self.b = r, g, b
 
-    # === CONVERSIONS ===
+    # === Conversions ===
     def to_hex(self) -> str:
-        """Convert to hex string (#RRGGBB)."""
         return f"#{self._r:02x}{self._g:02x}{self._b:02x}"
 
-    @classmethod
-    def from_hex(cls, hex_string: str) -> "Color":
-        """Create Color from a hex string (#RRGGBB or RRGGBB)."""
-        hex_string = hex_string.lstrip("#")
-        if len(hex_string) != 6:
-            raise ValueError("Hex string must be 6 characters long")
-        r, g, b = (
-            int(hex_string[0:2], 16),
-            int(hex_string[2:4], 16),
-            int(hex_string[4:6], 16),
-        )
-        return cls(r, g, b)
-
-    @classmethod
-    def from_normalized(cls, r: float, g: float, b: float) -> "Color":
-        """Create Color from normalized values [0.0–1.0]."""
-        return cls(int(r * 255), int(g * 255), int(b * 255))
-
-    @classmethod
-    def random(cls) -> "Color":
-        """Generate a random Color."""
-        return cls(
-            random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
-        )
-
-    # === ITERATION & ACCESS ===
-    def __iter__(self) -> Iterator[int]:
-        yield self._r
-        yield self._g
-        yield self._b
-
-    def __getitem__(self, index: int) -> int:
-        if index == 0:
-            return self._r
-        elif index == 1:
-            return self._g
-        elif index == 2:
-            return self._b
-        else:
-            raise IndexError("Color index out of range (0–2)")
-
-    def __len__(self) -> int:
-        return 3
-
-    # === COMPARISON & HASH ===
-    def __eq__(self, other: "Color") -> bool:
-        return isinstance(other, Color) and (self._r, self._g, self._b) == (
-            other._r,
-            other._g,
-            other._b,
-        )
-
-    def __hash__(self) -> int:
-        return hash((self._r, self._g, self._b))
-
-    # === STRING REPRESENTATIONS ===
-    def __str__(self) -> str:
-        return f"Color({self._r}, {self._g}, {self._b})"
-
-    def __repr__(self) -> str:
-        return f"Color({self._r}, {self._g}, {self._b})"
-
-    # === EXTRA UTILITIES ===
     def to_tuple(self) -> Tuple[int, int, int]:
-        """Converts Color to Tuple"""
         return (self._r, self._g, self._b)
 
-    def to_list(self) -> list:
-        """Converts Color to List"""
+    def to_list(self) -> list[int]:
         return [self._r, self._g, self._b]
 
-    def to_dict(self) -> dict:
-        """Converts Color to Dictionary"""
+    def to_dict(self) -> dict[str, int]:
         return {"r": self._r, "g": self._g, "b": self._b}
 
     def to_bytes(
@@ -261,72 +159,103 @@ class Color(Sequence[int]):
         big_endian: bool = False,
         alpha: float = 1.0,
     ) -> bytes:
-        """Converts Color to Bytes"""
         from struct import pack
 
-        endian: str = ">" if big_endian else "<"
-        type_map = {
-            "f32": "f",
-            "f64": "d",
-            "u8": "B",
-        }
+        type_map = {"f32": "f", "f64": "d", "u8": "B"}
+        if num_type not in type_map:
+            raise ValueError(f"Unsupported type: {num_type}")
+        type_char = type_map[num_type]
+        endian = ">" if big_endian else "<"
+        fmt = f"{endian}{num_parts}{type_char}"
 
-        type: str = type_map[num_type]
-
-        packing_str = f"{endian}{num_parts}{type}"
-
-        if num_type == "u8":
-            packing_data = self.rgb
-            if num_parts == 4:
-                alpha = int(alpha * 255)
+        data = self.rgb if num_type == "u8" else self.normalized()
+        if num_parts == 4:
+            alpha_val = int(alpha * 255) if num_type == "u8" else float(alpha)
+            return pack(fmt, *data, alpha_val)
+        elif num_parts == 3:
+            return pack(fmt, *data)
         else:
-            packing_data = self.normalized()
-
-        if num_parts == 3:
-            return pack(packing_str, *packing_data)
-        elif num_parts == 4:
-            return pack(packing_str, *packing_data, alpha)
-        else:
-            raise TypeError(
-                "Argument num_parts in Color.to_bytes() must be either 3 or 4"
-            )
+            raise ValueError("num_parts must be 3 or 4")
 
     def css_rgb(self) -> str:
-        """Converts Color to a css rgb string"""
         return f"rgb({self._r}, {self._g}, {self._b})"
 
     def css_rgba(self, alpha: float = 1.0) -> str:
-        """Converts Color to a css rgba string"""
         alpha = max(0.0, min(1.0, alpha))
         return f"rgba({self._r}, {self._g}, {self._b}, {alpha})"
 
     def normalized(self) -> Tuple[float, float, float]:
-        """Converts Color to noramalized Color (0-1)"""
-        return (self._r / 255.0, self._g / 255.0, self._b / 255.0)
+        return (self._r / 255, self._g / 255, self._b / 255)
+
+    def int24(self) -> int:
+        return (self._r << 16) | (self._g << 8) | self._b
 
     @property
     def luminance(self) -> float:
-        """Relative luminance (0–1), sRGB standard."""
+        def linearize(c: int) -> float:
+            lc = c / 255
+            return lc / 12.92 if lc <= 0.03928 else ((lc + 0.055) / 1.055) ** 2.4
 
-        def linearize(c):
-            c = c / 255.0
-            return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+        return (
+            0.2126 * linearize(self._r)
+            + 0.7152 * linearize(self._g)
+            + 0.0722 * linearize(self._b)
+        )
 
-        r_lin, g_lin, b_lin = linearize(self._r), linearize(self._g), linearize(self._b)
-        return 0.2126 * r_lin + 0.7152 * g_lin + 0.0722 * b_lin
-
-    # === VARIANT CREATORS ===
+    # === Variants ===
     def with_red(self, r: int) -> "Color":
-        """Update the r value of a Color"""
         return Color(r, self._g, self._b)
 
     def with_green(self, g: int) -> "Color":
-        """Update the g value of a Color"""
         return Color(self._r, g, self._b)
 
     def with_blue(self, b: int) -> "Color":
-        """Update the b value of a Color"""
         return Color(self._r, self._g, b)
+
+    # === Factory Methods ===
+    @classmethod
+    def from_hex(cls, hex_str: str) -> "Color":
+        hex_str = hex_str.lstrip("#")
+        if len(hex_str) != 6:
+            raise ValueError("Hex string must be 6 digits")
+        r, g, b = int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)
+        return cls(r, g, b)
+
+    @classmethod
+    def from_normalized(cls, r: float, g: float, b: float) -> "Color":
+        return cls(int(r * 255), int(g * 255), int(b * 255))
+
+    @classmethod
+    def from_int24(cls, val: int) -> "Color":
+        return cls((val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF)
+
+    @classmethod
+    def random(cls) -> "Color":
+        return cls(
+            random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+        )
+
+    # === Dunder Methods ===
+    def __iter__(self) -> Iterator[int]:
+        return iter((self._r, self._g, self._b))
+
+    def __getitem__(self, index: int) -> int:
+        return (self._r, self._g, self._b)[index]
+
+    def __len__(self) -> int:
+        return 3
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, Color) and self.to_tuple() == other.to_tuple()
+
+    def __hash__(self) -> int:
+        return hash((self._r, self._g, self._b))
+
+    def __str__(self) -> str:
+        return f"Color({self._r}, {self._g}, {self._b})"
+
+    def __repr__(self) -> str:
+        return str(self)
 
 
 # === CONSTANT COLORS ===
